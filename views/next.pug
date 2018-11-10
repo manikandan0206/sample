@@ -1,0 +1,8 @@
+extends layout
+block content
+ h2 next page
+  .row
+    center
+      form(method='POST' action='/next')
+        input(type='text',  name='Name',placeholder="Enter you name")
+        button.form-control(type='submit' name='submit') Submit

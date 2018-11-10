@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const mongodbSchema = mongoose.Schema({
-    title:{
+    name:{
         type:String
     }
 });

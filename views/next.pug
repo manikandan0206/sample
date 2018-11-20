@@ -1,8 +1,8 @@
 extends layout
 block content
- h2 next page
   .row
-    center
-      form(method='POST' action='/next')
-        input(type='text',  name='Name',placeholder="Enter you name")
-        button.form-control(type='submit' name='submit') Submit
+     center
+        h4 Next page
+        form(method='POST' action='/next')
+           input(type='text', name='Name')
+           button(type='submit' name='submit') submit

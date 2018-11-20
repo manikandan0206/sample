@@ -3,12 +3,49 @@ const app = express();
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-mongoose.connect('mongodb://manikandantl:mani1996@ds157853.mlab.com:57853/sampledb');
+var session = require('express-session');
+var cookieParser = require('cookie-parser');
+var flash=require('connect-flash');
+var expressValidator=require('express-validator');
+var expressmessages = require('express-messages');
+
+mongoose.connect('mongodb://Localhost:27017/nodekb');
 const db = mongoose.connection;
 
 //Load view Engine
 app.set('views',path.join(__dirname,'views'));
 app.set('view engine','pug');
+
+//express message middleware
+app.use(require('connect-flash')());
+app.use(function(req, res, next){
+    res.locals.messages=require('express-messages')(req,res);
+    next();
+});
+
+//express session middleware
+app.use(session({
+    secret:'keyboard cat',
+    resave: true,
+    saveUninitialized: true
+}));
+
+// Express validator middleware
+app.use(expressValidator({
+    errorFormatter:function (param,msg,value) {
+        var namespace=param.split('.'),
+            roor=namespace.shift(),
+            formParam=root;
+        while(namespace.length){
+            formParam+='[' + namespace.shift() + ']';
+        }
+        return{
+            param:formParam,
+            msg:msg,
+            value:value
+        };
+    }
+}));
 
 // connecting the Db
 const sowmi = require('./modules/mongodb');
@@ -31,15 +68,16 @@ app.get('/next',function (req,res) {
 });
 
 app.post('/next',function (req,res) {
+    console.log(req.body.Name);
     var db = new sowmi();
     db.name = req.body.Name;
-    
     db.save(function(err){
        if(err){
            console.log("err");
            return;
        }
         else{
+           req.flash('success','Your are saved');
            res.redirect('/');
        }
     });

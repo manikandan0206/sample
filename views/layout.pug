@@ -1,6 +1,7 @@
 doctype html
-head
- title sample
+html(lang='en')
+    head
+             title sample
 
              meta(charset='utf-8')
              meta(name='viewport', content='width=device-width, initial-scale=1')
@@ -18,10 +19,10 @@ head
              <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
              <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
-body
-  !=messages('message',locals)
-  block content
-  br
-  hr
-  footer
-    p Copyright @copy 2018
+    body
+              !=messages('message',locals)
+              block content
+              br
+              hr
+              footer
+                p Copyright @copy 2018

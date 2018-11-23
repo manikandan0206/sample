@@ -1,0 +1,8 @@
+extends layout
+block content
+     .row
+          center
+            h4 Mail page
+                    form(method='POST' action='/mail')
+                       input(type='email', name='mail')
+                       button(type='submit' name='submit') submit

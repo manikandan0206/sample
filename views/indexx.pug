@@ -1,0 +1,8 @@
+extends layout
+block content
+  .row
+     center
+        h4 Next page
+        form(method='POST' action='/pdfMake/pdf')
+           input(type='text', name='Name')
+           button(type='submit' name='submit') submit

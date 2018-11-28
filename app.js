@@ -10,7 +10,11 @@ var expressValidator=require('express-validator');
 var expressmessages = require('express-messages');
 var nodemailer = require('nodemailer');
 var mailer = require('express-mailer');
-mongoose.connect('mongodb://Localhost:27017/nodekb');
+const passport = require('passport');
+const config = require('./config/database');
+
+
+mongoose.connect(config.database);
 const db = mongoose.connection;
 
 //Load view Engine
@@ -19,27 +23,11 @@ app.set('view engine','pug');
 
 app.use(express.static(path.join(__dirname,'invoice')));
 
-
-//----------->generate the pdf file
-var pdf = require('pdfkit');
-var pdff = require('pdf');
-var fs = require('fs');
-
-var myDoc = new pdf;
-
-myDoc.pipe(fs.createWriteStream('node1.pdf'));
-
-myDoc.font('Times-Roman')
-    .fontSize(48)
-    .text('NodeJS PDF Document',100,100);
-
-myDoc.end();
-//----------->
-
 //express message middleware
 app.use(require('connect-flash')());
 app.use(function(req, res, next){
     res.locals.messages=require('express-messages')(req,res);
+    res.locals.pdfmail='mani';
     next();
 });
 
@@ -67,9 +55,21 @@ app.use(expressValidator({
     }
 }));
 
+//passport config
+require('./config/passport')(passport);
+
+//passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('*',function (req,res,next) {
+    res.locals.user = req.user || null;
+    next();
+});
+
 // connecting the Db
 const sowmi = require('./modules/mongodb');
-
+const user = require('./modules/user');
 
 //middle ware for body parser
 app.use(bodyParser.urlencoded({extended:false}));
@@ -81,7 +81,7 @@ app.use(bodyParser.json());
 
 app.get('/',function(req,res){
     sowmi.find({},function (err,result) {
-        console.log(__dirname+'/node.pdf');
+       
     res.render('index',{title:result});
 });
 });
@@ -105,31 +105,41 @@ app.post('/next',function (req,res) {
        }
     });
 });
-// mail
+// ------->mail with pdf generator
 
 app.get('/mail',function (req,res) {
    res.render('mail'); 
 });
 
 app.post('/mail',function (req,res) {
+
+    const fname = req.body.fname;
+    const lname = req.body.lname;
+
+    var documentDefinition =
+
+            `Hello ${fname} ${lname} \n Nice to meet you!`;
+
+    
 //----------->generate the pdf file
+    
     var pdf = require('pdfkit');
     var pdff = require('pdf');
     var fs = require('fs');
-
     var myDoc = new pdf;
-
+    
     myDoc.pipe(fs.createWriteStream('node1.pdf'));
 
     myDoc.font('Times-Roman')
-        .fontSize(24)
-        .text('Namakkal property totally free for the First Month',100,100);
+    
+        .fontSize(20)
+        .text(documentDefinition);
     myDoc.end();
 //----------->
 
   console.log(req.body.mail);
     var output= `<center><b><h2 style="color:white;background-color: #437fe0">Namakkal Property!</h2><p>Hai,Manikandan</p><p>Free Billing Statment.</p></center>
-                                    <p >Name:Manikandan</p>
+                                    <p >Name:${fname}</p>
                                     <p >Property Name:MK Builder's</p>
                                     <p >organization Name:National Property Private Limited Company</p>
                                     <hr>
@@ -147,7 +157,6 @@ app.post('/mail',function (req,res) {
             pass: 'MdC-NKX-D8r-Xam1#'
         }
     });
-    
     // setup e-mail data, even with unicode symbols
     var mailOptions = {
         from: '"INVOICE - Namakkal Property " <info@mealsday.com>',
@@ -161,7 +170,6 @@ app.post('/mail',function (req,res) {
             contentType: 'application/pdf'
         }]
     };
-
     // send mail with defined transport object
     transporter.sendMail(mailOptions, function(error, info){
         if(error){
@@ -173,9 +181,82 @@ app.post('/mail',function (req,res) {
 
     });
 });
+//----------->new video for html to pdf
 
-const pdfRoute = require('./routes/pdfmake');
-app.use('/pdfMake',pdfRoute);
+const pdfRoute = require('./routes/pdfMake');
+app.use('/pdfMake', pdfRoute);
+
+// we have use routes - pdfMake.js
+// we have get and post page as indexx.pug
+
+//------------>
+
+//----------------> code for image upload using multer in within application
+var multer = require('multer');
+// Set the storage engine
+var storage = multer.diskStorage({
+    destination:'./public/uploads/',
+    filename: function (req,file,cb){
+        cb(null,file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    }
+});
+
+// Init Upload
+var upload = multer({
+    storage: storage,
+    limits:{fileSize: 1000000},
+    fileFilter: function(req, file, cb) {
+        checkFileType(file, cb);
+    }
+}).single('myImage');
+
+// Check File Type
+function checkFileType (file, cb){
+// Allowed ext
+    const filetypes = /jpeg|jpg|png/;
+// Check ext
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+// Check mime
+    const mimetype = filetypes.test(file.mimetype);
+
+    if(mimetype && extname){
+        return cb(null,true);
+    } else {
+        cb('Error: Images Only!');
+    }
+}
+// public folder
+app.use(express.static('./public'));
+app.get('/uploads',function (req,res) {
+   res.render('uploads'); 
+});
+// upload page post
+app.post('/uploads', function(req, res) {
+    upload(req, res, function (err) {
+        if(err){
+            res.render('login', {
+                msg: err
+            });
+        } else {
+            if(req.file == undefined){
+                res.render('uploads', {
+                    msg: 'Error: No File Selected!'
+                });
+
+            } else {
+                res.render('uploads', {
+                    msg: 'File Uploaded!',
+                    file: `uploads/${req.file.filename}`
+                });
+
+                req.flash("success", 'Uploaded successfully!!');
+            }
+        }
+    });
+});
+//------------->
+var users=require('./routes/users');
+app.use('/users',users);
 
 
 app.listen(3000, function(){

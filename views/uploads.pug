@@ -1,0 +1,76 @@
+extends layout
+
+block content
+        script.
+            $(document).ready(function() {
+            $("#files").on('change', function() {
+            var files = $(this)[0].files;
+
+            // Loop through the FileList and render image files as thumbnails.
+            for (var i = 0, f; f = files[i]; i++) {
+
+            // Only process image files.
+            if (!f.type.match('image.*')) {
+            continue;
+            }
+
+            var reader = new FileReader();
+
+            // Closure to capture the file information.
+            reader.onload = (function(theFile) {
+            return function(e) {
+            // Render thumbnail.
+            var span = document.createElement('span');
+            span.innerHTML =
+            [
+            '<img style="height: 145px;width:256px; margin: 5px" src="',
+            e.target.result,
+            '" title="', escape(theFile.name),
+            '"/>'
+            ].join('');
+
+            document.getElementById('myimg').insertBefore(span, null);
+            };
+            })(f);
+
+            // Read in the image file as a data URL.
+            reader.readAsDataURL(f);
+            }
+
+            });
+            });
+
+
+
+
+
+        .row
+            br
+            br
+            br
+            br
+            .col-sm-2
+            .col-sm-8
+            br
+            br
+        .row
+            center
+                form(action='/uploads', method='POST', enctype='multipart/form-data')
+                h3 File Upload
+        .row
+            .col-sm-3
+            .col-sm-6
+                if msg
+                .error.alert-error.inner
+            p
+            center #{msg}
+                .col-sm-6
+                !=messages('message',locals)
+                .row
+                    input(name='myImage',id="files",type='file')
+                    button.btn(type='submit') Submit
+                .row(id="myimg")
+
+                .row
+                    if(file)
+                    img(src=file,style="width=200px")

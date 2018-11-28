@@ -1,0 +1,41 @@
+extends layout
+block content
+ .row(style='margin-left:600px')
+     h2 Register
+        .row
+           if(errors)
+              .row
+                .col-sm-12#err.box.inner.alert-danger(style="border-radius:4px;background-color:white;")
+                   h5
+                      i.glyphicon.glyphicon-alert
+                      span &nbsp;&nbsp;There was a problem
+                   .col-sm-12(stlyle="margin-left:20px;")
+                     each error, i in errors
+                         ul(style="color:black;")
+                            li(style="font-size:15px;") #{error.msg}
+ .row
+    .col-sm-4.col-md-4.col-sm-offset-4.col-md-offset-4
+      center
+        form(method='POST' action='/users/register')
+           #form-group
+             label(for='name') Name:
+             input.form-control(type='text',name='name')
+           br
+           #form-group
+             label(for='email') Email:
+             input.form-control(type='text',name='email')
+           br
+           #form-group
+             label(for='email') Username:
+             input.form-control(type='text',name='username')
+           br
+           #form-group
+             label(for='password')  Password:
+             input.form-control(type='text',name='password')
+           br
+           #form-group
+             label(for='confirm') Confirm Password:
+             input.form-control(type='text',name='confirm')
+           br
+           .row
+                button.btn.btn-info(type='submit' value='submit') Submit
